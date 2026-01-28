@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-    Github, Linkedin, Facebook, Mail, ChevronDown, ExternalLink,
+  Github, Linkedin, Facebook, Mail, ChevronDown, ExternalLink, CheckCircle,
     Code2, Brain, Terminal, Cpu, Database, Award
 } from 'lucide-react';
 
@@ -55,9 +55,9 @@ const Navbar = () => {
 };
 
 const Section = ({ children, id, className = "", style }: { children: React.ReactNode, id?: string, className?: string, style?: React.CSSProperties }) => (
-    <section id={id} className={`py-24 px-6 md:px-12 relative `} style={style}>
+  <section id={id} className={`py-24 px-6 md:px-12 relative bg-cover bg-center bg-no-repeat bg-fixed ${className}`} style={style}>
         {style?.backgroundImage && (
-            <div className="absolute inset-0 bg-slate-950/90 z-0"></div>
+      <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px] z-0"></div>
         )}
         <div className="max-w-6xl mx-auto relative z-10">
             {children}
@@ -106,8 +106,22 @@ const projects = [
 ];
 
 const certificates = [
-    { title: "Professional AI Certification", issuer: "Tech Institute", date: "2023", desc: "Advanced certification in deep learning.", link: "#" },
-    { title: "Data Science Specialization", issuer: "Data Academy", date: "2022", desc: "Comprehensive curriculum covering statistical analysis.", link: "#" }
+  { 
+    title: "Professional AI Certification", 
+    issuer: "Coursera", 
+    date: "2023", 
+    desc: "Advanced certification in deep learning architectures and computer vision systems.", 
+    verifyUrl: "https://coursera.org/verify/123",
+    imageUrl: "/cert-placeholder.png" 
+  },
+  { 
+    title: "Data Science Specialization", 
+    issuer: "Udemy", 
+    date: "2022", 
+    desc: "Comprehensive curriculum covering statistical analysis, machine learning, and data visualization.", 
+    verifyUrl: "https://udemy.com/certificate/UC-123",
+    imageUrl: "/cert-placeholder.png"
+  }
 ];
 
 const experience = [
@@ -236,7 +250,7 @@ export default function Home() {
             </Section>
 
             {/* Projects Section */}
-            <Section id="projects" className="bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/homepage2.png')" }}>
+      <Section id="projects" style={{ backgroundImage: "url('/homepage2.png')" }}>
                 <SectionTitle subtitle="Some things I've built">Featured Projects</SectionTitle>
                 <div className="grid md:grid-cols-2 gap-8">
                     {projects.map((project, idx) => (
@@ -285,24 +299,38 @@ export default function Home() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: idx * 0.1 }}
-                            className="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-cyan-500/30 transition-all group"
+              className="bg-slate-900/50 rounded-2xl border border-slate-800 hover:border-cyan-500/30 transition-all group overflow-hidden flex flex-col"
                         >
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 text-cyan-400 group-hover:text-cyan-300 transition-colors">
-                                    <Award size={28} />
+              {/* Certificate Image / Link Area */}
+              <a href={cert.verifyUrl} target="_blank" rel="noreferrer" className="relative h-48 bg-slate-950 block overflow-hidden group-hover:opacity-90 transition-opacity">
+                 {/* Replace src with cert.imageUrl when you have real images */}
+                 <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-950">
+                    <Award size={48} className="opacity-20" />
+                    <span className="absolute bottom-3 right-3 bg-slate-900/80 text-cyan-400 text-xs px-2 py-1 rounded flex items-center gap-1 backdrop-blur-sm border border-slate-800">
+                      <CheckCircle size={12} /> Verified
+                    </span>
+                 </div>
+                 {/* <img src={cert.imageUrl} alt={cert.title} className="w-full h-full object-cover" /> */}
+              </a>
+              
+              <div className="p-6 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">{cert.title}</h3>
+                  <span className="text-xs font-mono text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950">{cert.date}</span>
                                 </div>
-                                <span className="text-sm font-mono text-slate-500 border border-slate-800 px-2 py-1 rounded bg-slate-950">{cert.date}</span>
+                <div className="text-cyan-500/80 text-sm font-medium mb-4">{cert.issuer}</div>
+                <p className="text-slate-400 leading-relaxed text-sm mb-4">{cert.desc}</p>
+                <a href={cert.verifyUrl} target="_blank" rel="noreferrer" className="mt-auto text-sm text-slate-500 hover:text-white inline-flex items-center gap-1 transition-colors">
+                  View Credential <ExternalLink size={12} />
+                </a>
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{cert.title}</h3>
-                            <div className="text-cyan-500/80 text-sm font-medium mb-4">{cert.issuer}</div>
-                            <p className="text-slate-400 leading-relaxed text-sm">{cert.desc}</p>
                         </motion.div>
                     ))}
                 </div>
             </Section>
 
             {/* Experience Section */}
-            <Section id="experience" className="bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/homepage1.png')" }}>
+      <Section id="experience" style={{ backgroundImage: "url('/homepage1.png')" }}>
                 <SectionTitle subtitle="My academic and professional journey">Experience</SectionTitle>
                 <div className="max-w-3xl mx-auto">
                     <div className="relative border-l-2 border-slate-800 ml-3 md:ml-6 space-y-12 pb-4">

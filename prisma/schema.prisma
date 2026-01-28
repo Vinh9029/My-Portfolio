@@ -1,0 +1,37 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Change to "postgresql" if using Supabase/Neon
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  desc        String
+  tags        String   // Store as JSON string or comma-separated
+  link        String?
+  createdAt   DateTime @default(now())
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  title       String
+  issuer      String
+  date        String
+  desc        String
+  verifyUrl   String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+}
+
+model Experience {
+  id          String   @id @default(cuid())
+  role        String
+  org         String
+  year        String
+  desc        String
+  createdAt   DateTime @default(now())
+}
