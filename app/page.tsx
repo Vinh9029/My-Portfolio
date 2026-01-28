@@ -98,38 +98,30 @@ const skills = [
     { category: "DevOps & Tools", icon: <Terminal className="w-6 h-6 text-orange-400" />, items: ["Docker", "Git", "Linux", "AWS", "CI/CD"] }
 ];
 
-const projects = [
-    { title: "Face Recognition System", desc: "Real-time face detection and recognition system.", tags: ["Python", "OpenCV", "CNN", "FaceNet"], link: "#", color: "from-blue-500 to-cyan-500" },
-    { title: "Context-Aware NLP Chatbot", desc: "Intelligent chatbot built with Transformer architecture.", tags: ["PyTorch", "HuggingFace", "BERT", "FastAPI"], link: "#", color: "from-purple-500 to-pink-500" },
-    { title: "Autonomous Drone Navigation", desc: "Simulation of autonomous drone pathfinding.", tags: ["Reinforcement Learning", "Unity", "Python", "PPO"], link: "#", color: "from-emerald-500 to-teal-500" },
-    { title: "AI Recommendation Engine", desc: "Collaborative filtering system suggesting products.", tags: ["Scikit-learn", "Redis", "System Design"], link: "#", color: "from-orange-500 to-red-500" }
-];
-
-const certificates = [
-  { 
-    title: "Professional AI Certification", 
-    issuer: "Coursera", 
-    date: "2023", 
-    desc: "Advanced certification in deep learning architectures and computer vision systems.", 
-    verifyUrl: "https://coursera.org/verify/123",
-    imageUrl: "/cert-placeholder.png" 
-  },
-  { 
-    title: "Data Science Specialization", 
-    issuer: "Udemy", 
-    date: "2022", 
-    desc: "Comprehensive curriculum covering statistical analysis, machine learning, and data visualization.", 
-    verifyUrl: "https://udemy.com/certificate/UC-123",
-    imageUrl: "/cert-placeholder.png"
-  }
-];
-
-const experience = [
-    { year: "2023 - Present", role: "BSc Computer Science (AI)", org: "Ton Duc Thang University", desc: "Specializing in Artificial Intelligence. GPA: 3.8/4.0." },
-    { year: "2022", role: "AI Research Intern", org: "TechStart Lab", desc: "Assisted in data preprocessing and model training." }
-];
-
 export default function Home() {
+    const [projects, setProjects] = useState<any[]>([]);
+    const [certificates, setCertificates] = useState<any[]>([]);
+    const [experience, setExperience] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [pRes, cRes, eRes] = await Promise.all([
+                    fetch('/api/projects'),
+                    fetch('/api/certificates'),
+                    fetch('/api/experience')
+                ]);
+
+                if (pRes.ok) setProjects(await pRes.json());
+                if (cRes.ok) setCertificates(await cRes.json());
+                if (eRes.ok) setExperience(await eRes.json());
+            } catch (error) {
+                console.error("Failed to fetch portfolio data", error);
+            }
+        };
+        fetchData();
+    }, []);
+
     return (
         <div className="bg-slate-950 min-h-screen text-slate-300 selection:bg-cyan-500/30 font-sans overflow-x-hidden">
             <Navbar />

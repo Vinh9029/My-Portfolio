@@ -17,6 +17,19 @@ export default function Dashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('projects');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    desc: '',
+    link: '',
+    tags: '',
+    role: '',
+    org: '',
+    year: '',
+    issuer: '',
+    date: '',
+    verifyUrl: '',
+    imageUrl: ''
+  });
 
   const menuItems = [
     { id: 'projects', label: 'Featured Projects', icon: <Layers size={20} /> },
@@ -25,8 +38,58 @@ export default function Dashboard() {
   ];
 
   const handleAddNew = () => {
-    // In a real app, you would reset form state here
+    setFormData({
+      title: '', desc: '', link: '', tags: '', role: '', org: '', year: '', issuer: '', date: '', verifyUrl: '', imageUrl: ''
+    });
     setIsModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    let body: any = {};
+    
+    if (activeTab === 'projects') {
+      body = {
+        title: formData.title,
+        desc: formData.desc,
+        link: formData.link,
+        tags: formData.tags.split(',').map(t => t.trim())
+      };
+    } else if (activeTab === 'experience') {
+      body = {
+        role: formData.role,
+        org: formData.org,
+        year: formData.year,
+        desc: formData.desc
+      };
+    } else if (activeTab === 'certificates') {
+      body = {
+        title: formData.title,
+        issuer: formData.issuer,
+        date: formData.date,
+        desc: formData.desc,
+        verifyUrl: formData.verifyUrl,
+        imageUrl: formData.imageUrl
+      };
+    }
+
+    try {
+      const res = await fetch(`/api/${activeTab}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        setIsModalOpen(false);
+        alert('Item added successfully!');
+        // Ideally, trigger a refresh of the list here
+      } else {
+        alert('Failed to save item.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred.');
+    }
   };
 
   return (
@@ -105,23 +168,43 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Title / Role</label>
-                <input type="text" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-400 mb-1">Description</label>
-                <textarea className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none h-24"></textarea>
-              </div>
-              {activeTab === 'certificates' && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">Verification URL</label>
-                  <input type="text" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" placeholder="https://..." />
-                </div>
+              
+              {/* Dynamic Form Fields based on Active Tab */}
+              {activeTab === 'projects' && (
+                <>
+                  <input placeholder="Project Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Tags (comma separated)" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Project Link (URL)" value={formData.link} onChange={e => setFormData({...formData, link: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <textarea placeholder="Description" value={formData.desc} onChange={e => setFormData({...formData, desc: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none h-24"></textarea>
+                </>
               )}
+
+              {activeTab === 'experience' && (
+                <>
+                  <input placeholder="Role / Position" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Organization / Company" value={formData.org} onChange={e => setFormData({...formData, org: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Year / Duration" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <textarea placeholder="Description" value={formData.desc} onChange={e => setFormData({...formData, desc: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none h-24"></textarea>
+                </>
+              )}
+
+              {activeTab === 'certificates' && (
+                <>
+                  <input placeholder="Certificate Title" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Issuer" value={formData.issuer} onChange={e => setFormData({...formData, issuer: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Verification URL" value={formData.verifyUrl} onChange={e => setFormData({...formData, verifyUrl: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <input placeholder="Image URL (e.g., /cert1.png)" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none" />
+                  <textarea placeholder="Description" value={formData.desc} onChange={e => setFormData({...formData, desc: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 outline-none h-24"></textarea>
+                </>
+              )}
+
               <div className="pt-4 flex justify-end gap-3">
                 <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-400 hover:text-white">Cancel</button>
-                <button className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium">
+                <button 
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium"
+                >
                   Save Item
                 </button>
               </div>
