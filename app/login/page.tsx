@@ -5,9 +5,11 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Github, Mail, Lock, Chrome } from 'lucide-react';
+import { useToast, ToastContainer } from '@/app/components/Toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { toasts, removeToast, error, success } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,6 +17,7 @@ export default function LoginPage() {
   const handleCredentialsLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     const result = await signIn('credentials', {
       username,
       password,
@@ -22,15 +25,19 @@ export default function LoginPage() {
     });
     
     if (result?.ok) {
-      router.push('/admin');
+      success('Login successful! Redirecting...', 2000);
+      setTimeout(() => router.push('/admin'), 2000);
     } else {
-      alert("Login failed");
+      error("Login failed. Please check your credentials and try again.");
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 text-slate-200 relative overflow-hidden font-sans">
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse"></div>

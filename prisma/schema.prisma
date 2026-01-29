@@ -3,8 +3,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
 datasource db {
   provider = "sqlite" // Change to "postgresql" if using Supabase/Neon
+  url      = env("DATABASE_URL")
 }
 
 model Account {

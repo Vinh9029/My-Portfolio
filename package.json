@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "prisma db seed",
+    "studio": "prisma studio"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -27,6 +29,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^7.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
