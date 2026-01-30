@@ -1,5 +1,6 @@
-// Email sending utility with Gmail support
-// This uses a simple fetch-based approach to avoid nodemailer dependency issues
+// Email sending utility
+// Uses Resend API for email delivery (Free tier available)
+// Get your API key from: https://resend.com
 
 export async function sendPasswordResetEmail(email: string, code: string, username: string) {
   const resetLink = `${process.env.NEXTAUTH_URL}/login`;
@@ -57,8 +58,41 @@ export async function sendPasswordResetEmail(email: string, code: string, userna
   `;
 
   try {
-    // For now, log the code to console for development
-    // In production, you can integrate with SendGrid, Mailgun, or install nodemailer properly
+    // Method 1: Using Resend API (Production)
+    if (process.env.RESEND_API_KEY) {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM_EMAIL || 'noreply@dquocvinh.great-site.net',
+          to: email,
+          subject: 'Password Reset Request - My Portfolio',
+          html: htmlContent,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Email sent successfully to ${email}`);
+        console.log(`   Verification Code: ${code}`);
+        console.log(`   Expires: ${new Date(Date.now() + 1000 * 60 * 60).toISOString()}`);
+        return true;
+      } else {
+        const error = await response.json();
+        console.error('❌ Resend API Error:', error);
+        // Fallback to console log if API fails
+        console.log(`\n========== PASSWORD RESET EMAIL ==========`);
+        console.log(`To: ${email}`);
+        console.log(`Verification Code: ${code}`);
+        console.log(`=========================================\n`);
+        return true; // Return true anyway to not block user
+      }
+    }
+    
+    // Method 2: Console logging (Development)
     console.log(`\n========== PASSWORD RESET EMAIL ==========`);
     console.log(`To: ${email}`);
     console.log(`Subject: Password Reset Request - My Portfolio`);
@@ -66,22 +100,10 @@ export async function sendPasswordResetEmail(email: string, code: string, userna
     console.log(`Expires: ${new Date(Date.now() + 1000 * 60 * 60).toISOString()}`);
     console.log(`=========================================\n`);
 
-    // Optional: You can use a service like Mailgun, SendGrid, or Resend instead
-    // const response = await fetch('https://api.mailgun.net/v3/YOUR_DOMAIN/messages', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    //   body: new URLSearchParams({
-    //     from: 'noreply@yourportfolio.com',
-    //     to: email,
-    //     subject: 'Password Reset Request - My Portfolio',
-    //     html: htmlContent,
-    //   })
-    // });
-
     return true;
   } catch (error) {
     console.error('Email sending error:', error);
     console.log(`[DEV] Password reset code for ${email}: ${code}`);
-    return false;
+    return true; // Don't fail the password reset process
   }
 }

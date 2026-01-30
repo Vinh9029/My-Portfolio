@@ -277,11 +277,24 @@ export default function Home() {
                                 </div>
                                 <p className="text-slate-400 mb-8 leading-relaxed h-20 overflow-hidden">{project.desc}</p>
                                 <div className="flex flex-wrap gap-2 mt-auto">
-                                    {(Array.isArray(project.tags) ? project.tags : JSON.parse(project.tags || '[]')).map((tag: string) => (
-                                        <span key={tag} className="text-xs font-mono font-medium text-cyan-300 bg-cyan-950/50 px-3 py-1.5 rounded-md border border-cyan-900/50">
-                                            {tag}
-                                        </span>
-                                    ))}
+                                    {(() => {
+                                        let tags: string[] = [];
+                                        if (Array.isArray(project.tags)) {
+                                            tags = project.tags;
+                                        } else if (typeof project.tags === 'string') {
+                                            try {
+                                                const parsed = JSON.parse(project.tags || '[]');
+                                                tags = Array.isArray(parsed) ? parsed : [];
+                                            } catch {
+                                                tags = project.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+                                            }
+                                        }
+                                        return tags.map((tag: string) => (
+                                            <span key={tag} className="text-xs font-mono font-medium text-cyan-300 bg-cyan-950/50 px-3 py-1.5 rounded-md border border-cyan-900/50">
+                                                {tag}
+                                            </span>
+                                        ));
+                                    })()}
                                 </div>
                             </div>
                         </motion.div>
@@ -309,14 +322,16 @@ export default function Home() {
                         >
               {/* Certificate Image / Link Area */}
               <a href={cert.verifyUrl} target="_blank" rel="noreferrer" className="relative h-48 bg-slate-950 block overflow-hidden group-hover:opacity-90 transition-opacity">
-                 {/* Replace src with cert.imageUrl when you have real images */}
-                 <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-950">
-                    <Award size={48} className="opacity-20" />
-                    <span className="absolute bottom-3 right-3 bg-slate-900/80 text-cyan-400 text-xs px-2 py-1 rounded flex items-center gap-1 backdrop-blur-sm border border-slate-800">
-                      <CheckCircle size={12} /> Verified
-                    </span>
-                 </div>
-                 {/* <img src={cert.imageUrl} alt={cert.title} className="w-full h-full object-cover" /> */}
+                 {cert.imageUrl ? (
+                    <img src={cert.imageUrl} alt={cert.title} className="w-full h-full object-cover" />
+                 ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-700 bg-slate-950">
+                       <Award size={48} className="opacity-20" />
+                    </div>
+                 )}
+                 <span className="absolute bottom-3 right-3 bg-slate-900/80 text-cyan-400 text-xs px-2 py-1 rounded flex items-center gap-1 backdrop-blur-sm border border-slate-800">
+                    <CheckCircle size={12} /> Verified
+                 </span>
               </a>
               
               <div className="p-6 flex-1 flex flex-col">

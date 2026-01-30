@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award,
@@ -14,7 +15,10 @@ import {
   X,
   Edit2,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  Lock,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useToast, ToastContainer } from '@/app/components/Toast';
 
@@ -49,6 +53,7 @@ type TabType = 'projects' | 'experience' | 'certificates';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('projects');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +62,19 @@ export default function Dashboard() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [experience, setExperience] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isViewerMode, setIsViewerMode] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      // Middleware sẽ handle redirect, nhưng thêm fallback
+      router.push('/login');
+    } else if (status === 'authenticated' && session) {
+      // User đã đăng nhập, check viewer mode
+      const mode = localStorage.getItem('userMode') || 'editor';
+      setIsViewerMode(mode === 'viewer');
+    }
+  }, [status, session, router]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -105,6 +123,10 @@ export default function Dashboard() {
   };
 
   const handleAddNew = () => {
+    if (isViewerMode) {
+      toast.warning('🔒 Viewer mode: You can only view content. Contact admin for full access.', 4500);
+      return;
+    }
     setEditingId(null);
     setFormData({
       title: '', desc: '', link: '', tags: '', role: '', org: '', year: '', 
@@ -114,6 +136,10 @@ export default function Dashboard() {
   };
 
   const handleEdit = (item: any) => {
+    if (isViewerMode) {
+      toast.warning('🔒 Viewer mode: You cannot edit content. Contact admin for full access.', 4500);
+      return;
+    }
     setEditingId(item.id);
     if (activeTab === 'projects') {
       setFormData({
@@ -213,7 +239,10 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
-
+    if (isViewerMode) {
+      toast.warning('🔒 Viewer mode: You cannot delete content. Contact admin for full access.', 4500);
+      return;
+    }
     try {
       const res = await fetch(`/api/${activeTab}/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -235,6 +264,23 @@ export default function Dashboard() {
   };
 
   const items = getItemsList();
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Checking access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated (double check)
+  if (status === 'unauthenticated') {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex">
@@ -280,14 +326,27 @@ export default function Dashboard() {
       <main className="flex-1 ml-64 p-8">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white capitalize">
-              {activeTab === 'experience' ? 'Experience' : activeTab.slice(0, -1)}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-white capitalize">
+                {activeTab === 'experience' ? 'Experience' : activeTab.slice(0, -1)}
+              </h1>
+              {isViewerMode && (
+                <div className="flex items-center gap-1 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                  <Lock size={14} className="text-amber-400" />
+                  <span className="text-xs font-medium text-amber-400">Viewer Mode</span>
+                </div>
+              )}
+            </div>
             <p className="text-slate-400 mt-1">Manage your portfolio content</p>
           </div>
           <button 
             onClick={handleAddNew}
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-cyan-500/20"
+            disabled={isViewerMode}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-lg ${
+              isViewerMode 
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' 
+                : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-500/20'
+            }`}
           >
             <Plus size={18} /> Add New
           </button>
@@ -349,15 +408,25 @@ export default function Dashboard() {
                     <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors"
-                        title="Edit"
+                        disabled={isViewerMode}
+                        className={`p-2 rounded-lg transition-colors ${
+                          isViewerMode
+                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                            : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                        title={isViewerMode ? 'Viewer mode - Edit disabled' : 'Edit'}
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
-                        title="Delete"
+                        disabled={isViewerMode}
+                        className={`p-2 rounded-lg transition-colors ${
+                          isViewerMode
+                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                            : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                        }`}
+                        title={isViewerMode ? 'Viewer mode - Delete disabled' : 'Delete'}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -548,13 +617,24 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Image URL</label>
-                        <input
-                          placeholder="e.g., /cert1.png"
-                          value={formData.imageUrl}
-                          onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
-                        />
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Certificate Image</label>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <input
+                              type="text"
+                              placeholder="e.g., /my_certificates/cert1.png"
+                              value={formData.imageUrl}
+                              onChange={e => setFormData({...formData, imageUrl: e.target.value})}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">📁 Images stored in: public/my_certificates/</p>
+                        {formData.imageUrl && (
+                          <div className="mt-3 p-3 bg-slate-950 rounded-lg border border-slate-800">
+                            <img src={formData.imageUrl} alt="Certificate preview" className="w-full h-32 object-cover rounded" onError={() => {}} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </>

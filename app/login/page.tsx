@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Github, Mail, Lock, Chrome, UserPlus, RefreshCw } from 'lucide-react';
 import { useToast, ToastContainer } from '@/app/components/Toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+  const { data: session, update: updateSession } = useSession();
   const { toasts, removeToast, error, success } = useToast();
   const [mode, setMode] = useState<'login' | 'register' | 'reset' | 'verify'>('login');
   const [username, setUsername] = useState('');
@@ -32,8 +35,10 @@ export default function LoginPage() {
     });
     
     if (result?.ok) {
-      success('Login successful! Redirecting...', 2000);
-      setTimeout(() => router.push('/admin'), 2000);
+      // Refresh session to ensure it's set
+      await updateSession();
+      success('Login successful! Redirecting...', 1500);
+      setTimeout(() => router.push(callbackUrl), 1500);
     } else {
       error("Login failed. Please check your credentials and try again.");
       setLoading(false);
