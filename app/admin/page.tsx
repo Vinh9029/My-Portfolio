@@ -213,7 +213,6 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(`Are you sure you want to delete this ${activeTab.slice(0, -1)}?`)) return;
 
     try {
       const res = await fetch(`/api/${activeTab}/${id}`, { method: 'DELETE' });

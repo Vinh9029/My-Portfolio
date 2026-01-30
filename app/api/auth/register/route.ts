@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       data: {
         username,
         password: hashed,
-        email: email ?? null,
+        ...(email ? { email } : {}),
         name: name ?? null,
         role: 'viewer',
       },
