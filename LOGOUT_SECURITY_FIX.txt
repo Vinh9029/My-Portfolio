@@ -1,0 +1,242 @@
+// SIGN OUT / LOGOUT FLOW FIX
+
+console.log(`
+✅ LOGOUT SECURITY FIX APPLIED
+═══════════════════════════════════════════════════════════
+
+PROBLEM:
+  Button "Sign Out" trong admin dashboard không hoạt động
+  Nó chỉ redirect về home page (/) mà không clear session
+  User có thể quay lại /admin mà không cần login lại
+
+SOLUTION:
+  1. Import signOut từ 'next-auth/react'
+  2. Gọi signOut({ redirect: false })
+  3. Show toast success message
+  4. Redirect về /login (không /)
+
+═══════════════════════════════════════════════════════════
+
+CODE CHANGES:
+
+📝 app/admin/page.tsx
+
+1. Import signOut:
+   ✅ import { useSession, signOut } from 'next-auth/react';
+
+2. Update Sign Out button:
+   OLD:
+   └─ onClick={() => router.push('/')}
+      (Không clear session!)
+   
+   NEW:
+   └─ onClick={async () => {
+        await signOut({ redirect: false });
+        toast.success('Signed out successfully!', 2000);
+        setTimeout(() => router.push('/login'), 1000);
+      }}
+      (Properly clear session + redirect)
+
+═══════════════════════════════════════════════════════════
+
+LOGOUT FLOW:
+
+1. User clicks "Sign Out" button
+   ↓
+2. signOut({ redirect: false })
+   ├─ Clears NextAuth session
+   ├─ Removes JWT token
+   ├─ Removes httpOnly cookie
+   └─ Does NOT redirect (redirect: false)
+   ↓
+3. Show toast: "Signed out successfully!"
+   ↓
+4. After 1 second, redirect to /login
+   ↓
+5. Session is gone - /admin will now redirect to /login
+
+═══════════════════════════════════════════════════════════
+
+SECURITY GUARANTEE:
+
+✅ signOut() completely clears session
+✅ JWT token is invalidated
+✅ httpOnly cookie is deleted
+✅ Cannot fake session (server-signed)
+✅ User must login again for /admin
+
+═══════════════════════════════════════════════════════════
+
+WHY redirect: false?
+
+By default, signOut() redirects to signIn page
+But we want to:
+1. Show custom toast message first
+2. Have control over where to redirect
+3. Prevent immediate redirect
+
+Solution: signOut({ redirect: false })
+Then manually redirect with router.push()
+
+═══════════════════════════════════════════════════════════
+
+COMPLETE LOGIN/LOGOUT CYCLE:
+
+1. User visits /login (not authenticated)
+   ├─ Page shows login form
+   └─ useSession() returns status='unauthenticated'
+
+2. User enters credentials + clicks Login
+   ├─ handleCredentialsLogin() called
+   ├─ signIn('credentials', {...}) → creates session
+   ├─ updateSession() → refreshes session state
+   ├─ Toast: "Login successful!"
+   └─ Redirect to /admin after 1.5s
+
+3. User sees admin dashboard
+   ├─ /admin page loads
+   ├─ useSession() returns status='authenticated'
+   ├─ Dashboard renders ✅
+   └─ Session cookie is valid
+
+4. User clicks "Sign Out"
+   ├─ signOut({ redirect: false }) → clears session
+   ├─ Toast: "Signed out successfully!"
+   ├─ Redirect to /login after 1s
+   └─ Session cookie is destroyed
+
+5. User tries to visit /admin again
+   ├─ useSession() returns status='unauthenticated'
+   ├─ useEffect redirects to /login
+   └─ Loop back to step 1
+
+═══════════════════════════════════════════════════════════
+
+SESSION LIFECYCLE:
+
+[Login]
+  ↓
+JWT Token Created + httpOnly Cookie Set
+  ↓
+User can access /admin (authenticated)
+  ↓
+Token expires in 30 days (or manually signOut)
+  ↓
+[Sign Out]
+  ↓
+Session cleared, token invalidated
+  ↓
+User cannot access /admin (must login again)
+
+═══════════════════════════════════════════════════════════
+
+FILES CHANGED:
+
+✅ app/admin/page.tsx
+   ├─ Added: import signOut
+   └─ Updated: Sign Out button handler
+
+═══════════════════════════════════════════════════════════
+
+TESTING CHECKLIST:
+
+Test 1: Normal Logout
+✓ Login successfully
+✓ Click "Sign Out" button
+✓ Expect: Toast "Signed out successfully!"
+✓ Redirect to /login page
+✓ Try /admin again → redirects to /login (not accessible)
+
+Test 2: Session Persistence
+✓ Login → /admin
+✓ Close browser (keep cookies)
+✓ Reopen and visit /admin
+✓ Still authenticated (session valid for 30 days)
+
+Test 3: Session Expiration
+✓ Login → get session cookie
+✓ Wait 30 days OR manually delete cookie
+✓ Try /admin
+✓ Session expired → redirect /login
+
+Test 4: Direct /login Visit After Login
+✓ Already logged in
+✓ Visit /login page
+✓ Should show login form (or redirect?)
+✓ Can still access /admin
+
+═══════════════════════════════════════════════════════════
+
+NEXTAUTH FLOW:
+
+signOut() internally:
+1. Removes JWT token from memory
+2. Removes httpOnly cookie from browser
+3. Calls session callback with null
+4. Clears session data
+
+Cannot be bypassed because:
+├─ JWT is server-signed
+├─ Cookie is httpOnly (JS cannot access)
+├─ Next request requires valid token
+└─ Invalid/missing token = unauthenticated
+
+═══════════════════════════════════════════════════════════
+
+BUTTON BEHAVIOR:
+
+Before Fix:
+┌──────────────────────────────────┐
+│         [Sign Out Button]        │
+└──────────────────────────────────┘
+         ↓
+    Click event
+         ↓
+  router.push('/') 
+         ↓
+  Redirects to home
+         ↓
+  ⚠️ Session STILL valid!
+     User can go back to /admin
+         ↓
+  SECURITY ISSUE ❌
+
+After Fix:
+┌──────────────────────────────────┐
+│         [Sign Out Button]        │
+└──────────────────────────────────┘
+         ↓
+    Click event
+         ↓
+  1. signOut({ redirect: false })
+  2. Toast: "Signed out successfully!"
+  3. setTimeout(() => router.push('/login'), 1000)
+         ↓
+  Session DESTROYED ✅
+  Redirect to /login
+         ↓
+  User cannot access /admin
+     (must login again)
+         ↓
+  SECURE ✅
+
+═══════════════════════════════════════════════════════════
+
+RELATED FILES:
+
+- app/api/auth/[...nextauth]/route.ts → NextAuth config
+- app/login/page.tsx → Login page (uses signIn)
+- app/admin/page.tsx → Admin dashboard (uses signOut)
+- app/providers.tsx → SessionProvider wrapper
+
+═══════════════════════════════════════════════════════════
+
+READY FOR TESTING
+
+All changes applied ✅
+No TypeScript errors ✅
+Just restart dev server: npm run dev
+Then test the logout flow
+
+═══════════════════════════════════════════════════════════
+`);

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award,
@@ -293,160 +293,369 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans flex relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+      </div>
+
+      <style>{`
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+      `}</style>
+
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
 
       {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl fixed h-full z-20 flex flex-col">
-        <div className="p-6 border-b border-slate-800">
-          <div className="text-xl font-bold tracking-tighter text-slate-100 flex items-center gap-2">
-            <LayoutDashboard className="text-cyan-500" />
+      <aside className="w-64 border-r border-slate-800/50 bg-slate-900/60 backdrop-blur-2xl fixed h-full z-20 flex flex-col shadow-2xl">
+        <div className="p-6 border-b border-slate-800/50 bg-gradient-to-br from-cyan-500/5 to-blue-500/5">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-lg font-bold tracking-tighter text-slate-100 flex items-center gap-2"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <LayoutDashboard className="text-cyan-500" />
+            </motion.div>
             <span>ADMIN<span className="text-cyan-500">.PANEL</span></span>
-          </div>
+          </motion.div>
+          <p className="text-xs text-slate-400 mt-2">Manage portfolio content</p>
         </div>
 
-        <nav className="p-4 space-y-2 flex-1">
-          {menuItems.map((item) => (
-            <button
+        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
+          {menuItems.map((item, index) => (
+            <motion.button
               key={item.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group ${activeTab === item.id
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shadow-lg shadow-cyan-500/20'
+                  : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                 }`}
             >
-              {item.icon}
+              <motion.div
+                animate={activeTab === item.id ? { scale: 1.2 } : { scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {item.icon}
+              </motion.div>
               <span className="font-medium">{item.label}</span>
-            </button>
+              {activeTab === item.id && (
+                <motion.div
+                  layoutId="activeIndicator"
+                  className="absolute inset-0 border-r-2 border-cyan-400 rounded-xl"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+            </motion.button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
-          <button
-            onClick={() => router.push('/')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
+        <div className="p-4 border-t border-slate-800/50 bg-gradient-to-t from-slate-900/50 to-transparent">
+          <motion.button
+            whileHover={{ x: -5 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={async () => {
+              await signOut({ redirect: false });
+              toast.success('Signed out successfully!', 2000);
+              setTimeout(() => router.push('/login'), 1000);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group"
           >
-            <LogOut size={20} />
+            <motion.div
+              animate={{ x: 0 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <LogOut size={20} />
+            </motion.div>
             <span className="font-medium">Sign Out</span>
-          </button>
+          </motion.button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
-        <header className="flex justify-between items-center mb-8">
+      <main className="flex-1 ml-64 p-8 relative z-10">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center mb-10 pb-8 border-b border-slate-800/30 bg-gradient-to-b from-slate-900/50 to-transparent -mx-8 px-8 pt-2"
+        >
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-white capitalize">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-3"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent capitalize">
                 {activeTab === 'experience' ? 'Experience' : activeTab.slice(0, -1)}
               </h1>
               {isViewerMode && (
-                <div className="flex items-center gap-1 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  className="flex items-center gap-1 px-3 py-1 bg-amber-500/15 border border-amber-500/40 rounded-full shadow-lg shadow-amber-500/10"
+                >
                   <Lock size={14} className="text-amber-400" />
-                  <span className="text-xs font-medium text-amber-400">Viewer Mode</span>
-                </div>
+                  <span className="text-xs font-semibold text-amber-400">Viewer Mode</span>
+                </motion.div>
               )}
-            </div>
-            <p className="text-slate-400 mt-1">Manage your portfolio content</p>
+            </motion.div>
+            <p className="text-slate-400 mt-2">Manage your portfolio content with ease</p>
           </div>
-          <button 
+          <motion.button 
             onClick={handleAddNew}
             disabled={isViewerMode}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-lg ${
+            whileHover={!isViewerMode ? { scale: 1.05 } : {}}
+            whileTap={!isViewerMode ? { scale: 0.95 } : {}}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg ${
               isViewerMode 
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50' 
-                : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-500/20'
+                : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-cyan-500/30'
             }`}
           >
-            <Plus size={18} /> Add New
-          </button>
-        </header>
+            <Plus size={20} /> Add New
+          </motion.button>
+        </motion.header>
 
         {/* Content Display */}
-        <div className="space-y-4">
+        <motion.div 
+          layout
+          className="grid grid-cols-1 gap-6"
+        >
           {loading ? (
-            <div className="text-center py-12 text-slate-400">Loading...</div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-full text-center py-16"
+            >
+              <div className="w-16 h-16 rounded-full border-4 border-cyan-500/20 border-t-cyan-500 animate-spin mx-auto mb-4 shadow-lg shadow-cyan-500/20"></div>
+              <p className="text-slate-400 text-lg">Loading items...</p>
+            </motion.div>
           ) : items.length === 0 ? (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
-              <div className="p-4 bg-slate-900 rounded-full mb-4">
-                {menuItems.find(i => i.id === activeTab)?.icon}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="col-span-full"
+            >
+              <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/60 border-2 border-dashed border-slate-700/50 hover:border-cyan-500/30 rounded-2xl p-16 flex flex-col items-center justify-center transition-all duration-300">
+                <motion.div
+                  animate={{ y: [-5, 5, -5] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="p-4 bg-slate-900/80 rounded-full mb-4 opacity-70"
+                >
+                  {menuItems.find(i => i.id === activeTab)?.icon}
+                </motion.div>
+                <h3 className="text-xl font-semibold text-slate-300 mb-2">No items yet</h3>
+                <p className="text-sm text-slate-400 max-w-xs text-center">
+                  Create your first {activeTab.slice(0, -1)} by clicking the "Add New" button above.
+                </p>
               </div>
-              <h3 className="text-lg font-medium text-slate-300 mb-2">No items found</h3>
-              <p className="text-sm max-w-xs text-center opacity-60">
-                You haven't added any items yet. Click the "Add New" button to get started.
-              </p>
-            </div>
+            </motion.div>
           ) : (
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {items.map((item: any, idx: number) => (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 hover:border-slate-700 transition-all group"
+                  layout
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                  transition={{ delay: idx * 0.05, type: "spring", stiffness: 100 }}
+                  className="group relative"
                 >
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-white mb-2 truncate">
-                        {item.title || item.role || 'Untitled'}
-                      </h3>
-                      <p className="text-slate-400 text-sm mb-3 line-clamp-2">
-                        {item.desc || `${item.org} • ${item.year || item.date}`}
-                      </p>
-                      {activeTab === 'projects' && item.tags && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {(typeof item.tags === 'string' ? item.tags.split(',') : item.tags).map((tag: string, i: number) => (
-                            <span key={i} className="px-2 py-1 bg-cyan-500/10 text-cyan-400 text-xs rounded-full border border-cyan-500/20">
-                              {tag.trim()}
-                            </span>
-                          ))}
+                  {/* Card Background Glow */}
+                  <motion.div
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-2xl blur-2xl opacity-30 group-hover:opacity-100 transition-opacity duration-500"
+                  />
+                  
+                  {/* Card */}
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="relative bg-slate-900/70 border border-slate-700/50 hover:border-cyan-500/60 rounded-2xl p-6 transition-all duration-300 backdrop-blur-xl shadow-xl hover:shadow-2xl hover:shadow-cyan-500/20"
+                  >
+                    {/* Top Row with Title and Actions */}
+                    <div className="flex justify-between items-start gap-4 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3">
+                          {/* Icon Badge */}
+                          <motion.div
+                            whileHover={{ rotate: 15, scale: 1.1 }}
+                            className="flex-shrink-0 mt-1"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-500/50 flex items-center justify-center text-xl shadow-lg shadow-cyan-500/20">
+                              {activeTab === 'projects' ? '📁' : activeTab === 'certificates' ? '🏆' : '💼'}
+                            </div>
+                          </motion.div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors truncate">
+                              {item.title || item.role || 'Untitled'}
+                            </h3>
+                            <p className="text-sm text-slate-400 mt-1 line-clamp-2 group-hover:text-slate-300 transition-colors">
+                              {item.desc || `${item.org || ''} ${item.year || item.date || ''}`}
+                            </p>
+                          </div>
                         </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <motion.button
+                          onClick={() => handleEdit(item)}
+                          disabled={isViewerMode}
+                          whileHover={!isViewerMode ? { scale: 1.15, rotate: 5 } : {}}
+                          whileTap={!isViewerMode ? { scale: 0.9 } : {}}
+                          className={`p-2.5 rounded-lg transition-all font-medium ${
+                            isViewerMode
+                              ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                              : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/30 border border-blue-500/40 shadow-lg shadow-blue-500/10'
+                          }`}
+                          title={isViewerMode ? 'Viewer mode - Edit disabled' : 'Edit'}
+                        >
+                          <Edit2 size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleDelete(item.id)}
+                          disabled={isViewerMode}
+                          whileHover={!isViewerMode ? { scale: 1.15, rotate: -5 } : {}}
+                          whileTap={!isViewerMode ? { scale: 0.9 } : {}}
+                          className={`p-2.5 rounded-lg transition-all font-medium ${
+                            isViewerMode
+                              ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                              : 'bg-red-500/15 text-red-400 hover:bg-red-500/30 border border-red-500/40 shadow-lg shadow-red-500/10'
+                          }`}
+                          title={isViewerMode ? 'Viewer mode - Delete disabled' : 'Delete'}
+                        >
+                          <Trash2 size={18} />
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    {/* Meta Information */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: idx * 0.05 + 0.2 }}
+                      className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-700/30"
+                    >
+                      {activeTab === 'projects' && item.link && (
+                        <motion.a
+                          whileHover={{ scale: 1.05 }}
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs px-3 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-lg hover:bg-cyan-500/30 transition-all truncate shadow-lg shadow-cyan-500/10"
+                        >
+                          🔗 {item.link.split('//')[1]?.split('/')[0] || 'Link'}
+                        </motion.a>
                       )}
-                      {activeTab === 'certificates' && item.issuer && (
-                        <p className="text-xs text-slate-500">
-                          Issued by <span className="text-slate-300 font-medium">{item.issuer}</span> • {item.date}
-                        </p>
+                      {activeTab === 'certificates' && (
+                        <>
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="text-xs px-3 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg shadow-lg shadow-amber-500/10"
+                          >
+                            🏅 {item.issuer}
+                          </motion.div>
+                          {item.verifyUrl && (
+                            <motion.a
+                              whileHover={{ scale: 1.05 }}
+                              href={item.verifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs px-3 py-2 bg-green-500/20 text-green-300 border border-green-500/40 rounded-lg hover:bg-green-500/30 transition-all shadow-lg shadow-green-500/10"
+                            >
+                              ✓ Verify
+                            </motion.a>
+                          )}
+                          {item.date && (
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              className="text-xs px-3 py-2 bg-slate-700/40 text-slate-300 rounded-lg shadow-lg"
+                            >
+                              📅 {item.date}
+                            </motion.div>
+                          )}
+                        </>
                       )}
                       {activeTab === 'experience' && (
-                        <p className="text-xs text-slate-500">
-                          <span className="text-slate-300 font-medium">{item.org}</span> • {item.year}
-                        </p>
+                        <>
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="text-xs px-3 py-2 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-lg font-medium shadow-lg shadow-purple-500/10"
+                          >
+                            {item.org}
+                          </motion.div>
+                          {item.year && (
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              className="text-xs px-3 py-2 bg-slate-700/40 text-slate-300 rounded-lg shadow-lg"
+                            >
+                              📆 {item.year}
+                            </motion.div>
+                          )}
+                        </>
                       )}
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        disabled={isViewerMode}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isViewerMode
-                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
-                            : 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
-                        }`}
-                        title={isViewerMode ? 'Viewer mode - Edit disabled' : 'Edit'}
+                    </motion.div>
+
+                    {/* Tags Section (Projects) */}
+                    {activeTab === 'projects' && item.tags && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.05 + 0.3 }}
+                        className="flex flex-wrap gap-2"
                       >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        disabled={isViewerMode}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isViewerMode
-                            ? 'bg-slate-800 text-slate-600 cursor-not-allowed opacity-50'
-                            : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                        }`}
-                        title={isViewerMode ? 'Viewer mode - Delete disabled' : 'Delete'}
+                        {(typeof item.tags === 'string' ? item.tags.split(',') : item.tags).map((tag: string, i: number) => (
+                          <motion.span
+                            key={i}
+                            whileHover={{ scale: 1.1, y: -2 }}
+                            className="px-3 py-1.5 text-xs font-mono font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-900/60 rounded-md hover:bg-cyan-950 transition-all shadow-lg shadow-cyan-500/10"
+                          >
+                            #{tag.trim()}
+                          </motion.span>
+                        ))}
+                      </motion.div>
+                    )}
+
+                    {/* Certificate Image Preview */}
+                    {activeTab === 'certificates' && item.imageUrl && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: idx * 0.05 + 0.3 }}
+                        className="mt-4 pt-4 border-t border-slate-700/30"
                       >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
+                        <div className="text-xs text-slate-400 mb-2 font-medium">📸 Certificate Image:</div>
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          className="inline-block px-3 py-2 text-xs bg-slate-800/70 text-slate-300 rounded border border-slate-600/50 max-w-full truncate shadow-lg"
+                        >
+                          {item.imageUrl}
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </motion.div>
                 </motion.div>
               ))}
             </AnimatePresence>
           )}
-        </div>
+        </motion.div>
       </main>
 
       {/* Modal */}
@@ -456,61 +665,86 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="bg-slate-900 border border-slate-700/50 rounded-3xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto backdrop-blur-xl"
             >
-              <div className="flex justify-between items-center p-6 border-b border-slate-800 sticky top-0 bg-slate-900">
-                <h3 className="text-xl font-bold text-white">
-                  {editingId ? 'Edit' : 'Add New'} {activeTab === 'experience' ? 'Experience' : activeTab.slice(0, -1)}
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <motion.div
+                className="flex justify-between items-center p-8 border-b border-slate-800/50 sticky top-0 bg-gradient-to-r from-slate-900/95 to-slate-800/50 backdrop-blur-xl"
+                layoutId="modalHeader"
+              >
+                <div>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    {editingId ? 'Edit' : 'Add New'} {activeTab === 'experience' ? 'Experience' : activeTab.slice(0, -1)}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">Fill in the details below</p>
+                </div>
+                <motion.button
+                  onClick={() => setIsModalOpen(false)}
+                  whileHover={{ rotate: 90, scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-800 rounded-lg"
+                >
                   <X size={24} />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-8 space-y-5">
                 {/* Projects Form */}
                 {activeTab === 'projects' && (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Project Title *</label>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Project Title *</label>
                       <input
                         placeholder="Enter project title"
                         value={formData.title}
                         onChange={e => setFormData({...formData, title: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Description *</label>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Description *</label>
                       <textarea
                         placeholder="Enter project description"
                         value={formData.desc}
                         onChange={e => setFormData({...formData, desc: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors h-24 resize-none"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner h-24 resize-none"
                       ></textarea>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="grid grid-cols-2 gap-4"
+                    >
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Project Link</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Project Link</label>
                         <input
                           placeholder="https://..."
                           value={formData.link}
                           onChange={e => setFormData({...formData, link: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Color Gradient</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Color Gradient</label>
                         <select
                           value={formData.color}
                           onChange={e => setFormData({...formData, color: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white focus:outline-none transition-all shadow-inner"
                         >
                           <option value="from-blue-500 to-cyan-500">Blue to Cyan</option>
                           <option value="from-purple-500 to-pink-500">Purple to Pink</option>
@@ -518,116 +752,151 @@ export default function Dashboard() {
                           <option value="from-orange-500 to-red-500">Orange to Red</option>
                         </select>
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Tags (comma separated)</label>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Tags (comma separated)</label>
                       <input
                         placeholder="e.g., Python, OpenCV, CNN"
                         value={formData.tags}
                         onChange={e => setFormData({...formData, tags: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                       />
-                    </div>
+                    </motion.div>
                   </>
                 )}
 
                 {/* Experience Form */}
                 {activeTab === 'experience' && (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="grid grid-cols-2 gap-4"
+                    >
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Role/Position *</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Role/Position *</label>
                         <input
                           placeholder="e.g., AI Engineer"
                           value={formData.role}
                           onChange={e => setFormData({...formData, role: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Organization *</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Organization *</label>
                         <input
                           placeholder="e.g., TechStart Lab"
                           value={formData.org}
                           onChange={e => setFormData({...formData, org: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Year/Duration</label>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Year/Duration</label>
                       <input
                         placeholder="e.g., 2023 - Present"
                         value={formData.year}
                         onChange={e => setFormData({...formData, year: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Description</label>
                       <textarea
                         placeholder="Tell us about this role..."
                         value={formData.desc}
                         onChange={e => setFormData({...formData, desc: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors h-24 resize-none"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner h-24 resize-none"
                       ></textarea>
-                    </div>
+                    </motion.div>
                   </>
                 )}
 
                 {/* Certificates Form */}
                 {activeTab === 'certificates' && (
                   <>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Certificate Title *</label>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Certificate Title *</label>
                       <input
                         placeholder="Enter certificate title"
                         value={formData.title}
                         onChange={e => setFormData({...formData, title: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                       />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className="grid grid-cols-2 gap-4"
+                    >
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Issuer *</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Issuer *</label>
                         <input
                           placeholder="e.g., Tech Institute"
                           value={formData.issuer}
                           onChange={e => setFormData({...formData, issuer: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Date</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Date</label>
                         <input
                           placeholder="e.g., 2023"
                           value={formData.date}
                           onChange={e => setFormData({...formData, date: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <label className="block text-sm font-semibold text-slate-300 mb-3">Description</label>
                       <textarea
                         placeholder="Describe this certification..."
                         value={formData.desc}
                         onChange={e => setFormData({...formData, desc: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors h-24 resize-none"
+                        className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner h-24 resize-none"
                       ></textarea>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                      className="grid grid-cols-2 gap-4"
+                    >
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Verification URL</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Verification URL</label>
                         <input
                           placeholder="https://..."
                           value={formData.verifyUrl}
                           onChange={e => setFormData({...formData, verifyUrl: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Certificate Image</label>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Certificate Image</label>
                         <div className="flex gap-2 items-end">
                           <div className="flex-1">
                             <input
@@ -635,35 +904,48 @@ export default function Dashboard() {
                               placeholder="e.g., /my_certificates/cert1.png"
                               value={formData.imageUrl}
                               onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none transition-colors"
+                              className="w-full bg-slate-950/60 border border-slate-700/50 hover:border-slate-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none transition-all shadow-inner"
                             />
                           </div>
                         </div>
                         <p className="text-xs text-slate-500 mt-2">📁 Images stored in: public/my_certificates/</p>
                         {formData.imageUrl && (
-                          <div className="mt-3 p-3 bg-slate-950 rounded-lg border border-slate-800">
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mt-3 p-3 bg-slate-950/60 rounded-lg border border-slate-700/50"
+                          >
                             <img src={formData.imageUrl} alt="Certificate preview" className="w-full h-32 object-cover rounded" onError={() => {}} />
-                          </div>
+                          </motion.div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   </>
                 )}
 
-                <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">
-                  <button
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="pt-6 flex justify-end gap-3 border-t border-slate-800/50"
+                >
+                  <motion.button
                     onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2 text-slate-400 hover:text-white transition-colors font-medium"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-6 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg font-semibold transition-all"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={handleSave}
-                    className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-cyan-500/20"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-cyan-500/30"
                   >
                     {editingId ? 'Update' : 'Create'}
-                  </button>
-                </div>
+                  </motion.button>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>

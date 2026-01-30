@@ -22,27 +22,42 @@ export const SocialContactPopup: React.FC = () => {
       id: 'zalo',
       name: 'Zalo',
       icon: (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" />
+        <svg className="w-6 h-6" viewBox="0 0 32 32" fill="currentColor">
+          {/* Official Zalo Logo Style */}
+          <defs>
+            <linearGradient id="zaloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0084ff" />
+              <stop offset="100%" stopColor="#0068ff" />
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="4" fill="url(#zaloGrad)" opacity="0.2"/>
+          <path d="M16 6c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm3.5 11h-2.5v2.5h-2v-2.5h-2.5v-2h2.5v-2.5h2v2.5h2.5v2z" fill="currentColor"/>
         </svg>
       ),
-      color: 'from-blue-500 to-blue-600',
-      url: 'https://zalo.me/0396945957', // Replace with your Zalo URL
-      description: 'Chat on Zalo'
+      color: 'from-blue-600 to-blue-700',
+      url: 'https://zalo.me/0396945957',
+      description: '💬 Chat on Zalo'
     },
     {
       id: 'messenger',
       name: 'Messenger',
       icon: (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+        <svg className="w-6 h-6" viewBox="0 0 32 32" fill="currentColor">
+          {/* Official Messenger Logo Style */}
+          <defs>
+            <linearGradient id="messengerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0084ff" />
+              <stop offset="100%" stopColor="#0068ff" />
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="4" fill="url(#messengerGrad)" opacity="0.2"/>
+          <path d="M16 2C8.27 2 2 7.73 2 14.5c0 3.37 1.43 6.4 3.74 8.58L3 30l8.58-4.4C14.07 27.64 15 28 16 28c7.73 0 14-5.73 14-12.5S23.73 2 16 2zm0 23c-.83 0-1.6-.13-2.37-.37l-.7-.22-2.75 1.48.85-2.88-.6-.75C6.27 20.58 5 17.68 5 14.5 5 9.12 10.04 5 16 5c5.96 0 11 4.12 11 9.5S21.96 25 16 25z" fill="currentColor"/>
         </svg>
       ),
-      color: 'from-blue-400 to-blue-500',   
-      url: 'https://m.me/8129029sng', // Replace with your Facebook Messenger URL
-      description: 'Message on Facebook'
+      color: 'from-blue-500 to-blue-600',   
+      url: 'https://m.me/8129029sng',
+      description: '💬 Message on Facebook'
     }
-    
   ];
 
   return (
@@ -80,63 +95,66 @@ export const SocialContactPopup: React.FC = () => {
             className="fixed bottom-28 right-8 z-50"
           >
             {/* Main Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-80 overflow-hidden backdrop-blur-xl">
+            <div className="bg-gradient-to-b from-slate-800/95 to-slate-900/95 border border-slate-700 rounded-2xl shadow-2xl w-80 overflow-hidden backdrop-blur-xl">
               {/* Header */}
-              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-white font-bold text-lg">Get in Touch</h3>
+              <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-b border-slate-700 px-6 py-5 flex justify-between items-center">
+                <div>
+                  <h3 className="text-white font-bold text-lg">💬 Let's Connect</h3>
+                  <p className="text-slate-400 text-xs mt-1">Choose your platform</p>
+                </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 hover:bg-slate-700/50 rounded-lg transition-all text-slate-400 hover:text-slate-200"
                 >
-                  <X size={20} className="text-white" />
+                  <X size={20} />
                 </button>
               </div>
 
               {/* Content */}
-              <div className="p-4 space-y-3">
-                <p className="text-slate-400 text-sm mb-4">
-                  Choose your preferred platform to chat with me:
+              <div className="p-5 space-y-3">
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Reach out and let's have a conversation. I'm always happy to connect! 🚀
                 </p>
 
                 {/* Contact Options */}
                 {contacts.map((contact, idx) => (
                   <motion.div
                     key={contact.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
                   >
                     <motion.a
                       href={contact.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.03, x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       onHoverStart={() => setExpandedId(contact.id)}
                       onHoverEnd={() => setExpandedId(null)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${contact.color} hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden`}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${contact.color} hover:shadow-lg hover:shadow-${contact.id === 'zalo' ? 'blue-500/30' : 'blue-400/30'} transition-all cursor-pointer group relative overflow-hidden`}
                     >
-                      {/* Background glow */}
-                      <div className={`absolute inset-0 bg-gradient-to-r ${contact.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-lg -z-10`}></div>
+                      {/* Animated Background */}
+                      <div className={`absolute inset-0 bg-gradient-to-r ${contact.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}></div>
 
-                      {/* Icon */}
-                      <div className="text-white flex-shrink-0 bg-white/20 p-2 rounded-lg">
+                      {/* Icon Container */}
+                      <div className="relative text-white flex-shrink-0 bg-white/10 p-2.5 rounded-lg border border-white/10 group-hover:bg-white/20 transition-all">
                         {contact.icon}
                       </div>
 
                       {/* Text */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold text-sm">{contact.name}</p>
-                        <p className="text-white/80 text-xs truncate">{contact.description}</p>
+                      <div className="flex-1 min-w-0 relative">
+                        <p className="text-white font-semibold text-sm group-hover:text-white/95">{contact.name}</p>
+                        <p className="text-white/70 text-xs truncate group-hover:text-white/80">{contact.description}</p>
                       </div>
 
-                      {/* Arrow */}
+                      {/* Arrow Icon */}
                       <motion.div
-                        animate={{ x: expandedId === contact.id ? 4 : 0 }}
-                        className="text-white/80 flex-shrink-0"
+                        animate={{ x: expandedId === contact.id ? 6 : 0 }}
+                        className="text-white/60 flex-shrink-0 relative"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                       </motion.div>
                     </motion.a>
@@ -144,9 +162,9 @@ export const SocialContactPopup: React.FC = () => {
                 ))}
 
                 {/* Footer */}
-                <div className="pt-2 border-t border-slate-800">
-                  <p className="text-slate-500 text-xs text-center">
-                    I'll get back to you as soon as possible!
+                <div className="pt-3 border-t border-slate-700/50 mt-4">
+                  <p className="text-slate-400 text-xs text-center leading-relaxed">
+                    ✨ I typically respond within 24 hours
                   </p>
                 </div>
               </div>
