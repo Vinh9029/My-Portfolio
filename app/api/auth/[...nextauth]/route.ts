@@ -20,26 +20,31 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { username: credentials.username },
+          });
 
-        if (!user || !user.password) {
-          throw new Error('User not found');
+          if (!user || !user.password) {
+            throw new Error('User not found');
+          }
+
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+
+          if (!isPasswordValid) {
+            throw new Error('Invalid password');
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error('Authorize error:', error);
+          throw error;
         }
-
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          throw new Error('Invalid password');
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
       },
     }),
     GoogleProvider({
