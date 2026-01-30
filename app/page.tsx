@@ -263,7 +263,7 @@ export default function Home() {
                                 </div>
                                 <p className="text-slate-400 mb-8 leading-relaxed h-20 overflow-hidden">{project.desc}</p>
                                 <div className="flex flex-wrap gap-2 mt-auto">
-                                    {project.tags.map(tag => (
+                                    {(Array.isArray(project.tags) ? project.tags : JSON.parse(project.tags || '[]')).map((tag: string) => (
                                         <span key={tag} className="text-xs font-mono font-medium text-cyan-300 bg-cyan-950/50 px-3 py-1.5 rounded-md border border-cyan-900/50">
                                             {tag}
                                         </span>

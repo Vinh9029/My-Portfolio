@@ -1,5 +1,6 @@
-// e:\MyPortfolio\my-portoflio\prisma\seed.ts
+// e:\MyPortfolio-1\prisma\seed.ts
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -40,14 +41,16 @@ const certificates = [
         issuer: "Tech Institute",
         date: "2023",
         desc: "Advanced certification in deep learning architectures and computer vision systems.",
-        link: "#"
+        verifyUrl: "#",
+        imageUrl: "/cert-placeholder.png"
     },
     {
         title: "Data Science Specialization",
         issuer: "Data Academy",
         date: "2022",
         desc: "Comprehensive curriculum covering statistical analysis, machine learning, and data visualization.",
-        link: "#"
+        verifyUrl: "#",
+        imageUrl: "/cert-placeholder.png"
     }
 ];
 
@@ -67,43 +70,40 @@ const experience = [
 ];
 
 async function main() {
-    // 1. Seed User
+    // 1. Seed User with hashed password
+    const hashedPassword = await bcrypt.hash('keepgoing', 10);
     const user = await prisma.user.upsert({
         where: { username: 'dx_anpnymous9029' },
         update: {},
         create: {
             username: 'dx_anpnymous9029',
-            password: 'keepgoing', // In a real app, hash this password!
+            password: hashedPassword,
+            email: 'vinh@example.com',
+            name: 'Vinh Nguyen',
             role: 'editor',
         },
     });
-    console.log({ user });
+    console.log('✓ User created:', { id: user.id, username: user.username });
 
     // 2. Seed Projects
     for (const p of projects) {
         await prisma.project.create({ data: p });
     }
+    console.log('✓ Projects seeded:', projects.length);
 
     // 3. Seed Certificates
     for (const c of certificates) {
-        await prisma.certificate.create({
-            data: {
-                title: c.title,
-                issuer: c.issuer,
-                date: c.date,
-                desc: c.desc,
-                verifyUrl: c.link,
-                imageUrl: "/cert-placeholder.png" // Default placeholder
-            }
-        });
+        await prisma.certificate.create({ data: c });
     }
+    console.log('✓ Certificates seeded:', certificates.length);
 
     // 4. Seed Experience
     for (const e of experience) {
         await prisma.experience.create({ data: e });
     }
+    console.log('✓ Experience seeded:', experience.length);
 
-    console.log('Seeding finished.');
+    console.log('\n✅ Seeding finished successfully!');
 }
 
 main()
@@ -111,7 +111,7 @@ main()
         await prisma.$disconnect();
     })
     .catch(async (e) => {
-        console.error(e);
+        console.error('❌ Seeding failed:', e);
         await prisma.$disconnect();
         process.exit(1);
     });
