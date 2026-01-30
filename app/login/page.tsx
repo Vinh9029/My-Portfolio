@@ -169,7 +169,6 @@ export default function LoginPage() {
                   <input type="checkbox" className="rounded border-slate-800 bg-slate-950 text-cyan-500 focus:ring-offset-slate-950 focus:ring-cyan-500/20" />
                   <span className="text-slate-500 group-hover:text-slate-400 transition-colors">Remember me</span>
                 </label>
-                <button type="button" onClick={() => setMode('reset')} className="text-cyan-500 hover:text-cyan-400 transition-colors text-xs">Forgot password?</button>
               </div>
 
               <button 
