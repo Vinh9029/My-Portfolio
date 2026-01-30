@@ -63,16 +63,26 @@ export default function Dashboard() {
   const [experience, setExperience] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(false);
   const [isViewerMode, setIsViewerMode] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Check authentication status
   useEffect(() => {
+    // Nếu loading, chờ
+    if (status === 'loading') {
+      return;
+    }
+    
+    // Nếu chưa authenticate, redirect về login
     if (status === 'unauthenticated') {
-      // Middleware sẽ handle redirect, nhưng thêm fallback
-      router.push('/login');
-    } else if (status === 'authenticated' && session) {
-      // User đã đăng nhập, check viewer mode
+      router.push('/login?callbackUrl=/admin');
+      return;
+    }
+    
+    // Nếu authenticate, check viewer mode và set ready
+    if (status === 'authenticated' && session) {
       const mode = localStorage.getItem('userMode') || 'editor';
       setIsViewerMode(mode === 'viewer');
+      setAuthChecked(true);
     }
   }, [status, session, router]);
 
@@ -277,9 +287,9 @@ export default function Dashboard() {
     );
   }
 
-  // Redirect to login if not authenticated (double check)
-  if (status === 'unauthenticated') {
-    return null; // Will redirect via useEffect
+  // Don't render anything if not authenticated (useEffect will redirect)
+  if (!authChecked) {
+    return null;
   }
 
   return (
