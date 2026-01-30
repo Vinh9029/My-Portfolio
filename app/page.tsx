@@ -199,15 +199,27 @@ export default function Home() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="relative group"
+                        className="flex flex-col items-center gap-8"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-2xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                        <div className="relative aspect-square rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shadow-2xl">
-                            <div className="text-center p-8">
-                                <Brain size={80} className="text-cyan-500/50 mx-auto mb-4" />
-                                <p className="text-slate-600 text-sm">Profile Image Placeholder</p>
+                        <div className="relative group w-full max-w-md">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-2xl blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                            <div className="relative aspect-square rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shadow-2xl hover:border-cyan-500/30 transition-all">
+                                <div className="text-center p-8">
+                                    <Brain size={80} className="text-cyan-500/50 mx-auto mb-4 group-hover:text-cyan-400 transition-colors" />
+                                    <p className="text-slate-600 text-sm">Profile Image Placeholder</p>
+                                </div>
                             </div>
                         </div>
+                        <a
+                            href="/duongquocvinh_resume.pdf"
+                            download="duongquocvinh_resume.pdf"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-1 relative z-10"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            My Resume
+                        </a>
                     </motion.div>
                 </div>
             </Section>

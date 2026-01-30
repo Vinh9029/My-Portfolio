@@ -10,11 +10,15 @@ import { useToast, ToastContainer } from '@/app/components/Toast';
 export default function LoginPage() {
   const router = useRouter();
   const { toasts, removeToast, error, success } = useToast();
-  const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'reset' | 'verify'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCredentialsLogin = async (e: React.FormEvent) => {
@@ -59,6 +63,8 @@ export default function LoginPage() {
         setMode('login');
         setPassword('');
         setConfirmPassword('');
+        setUsername('');
+        setEmail('');
       } else {
         error(data?.error || 'Registration failed');
       }
@@ -70,29 +76,84 @@ export default function LoginPage() {
     }
   };
 
-  const handleReset = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email && !username) {
-      error('Please provide username or email to reset');
+    if (!resetEmail) {
+      error('Please provide your email address');
       return;
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      error('Please enter a valid email address');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: email || username }),
+        body: JSON.stringify({ identifier: resetEmail }),
       });
+      const data = await res.json();
       if (res.ok) {
-        success('If an account exists, a reset token was generated (check server logs).');
-        setMode('login');
+        success('✅ Email sent! Check your inbox for the verification code.');
+        setMode('verify');
       } else {
-        const data = await res.json();
-        error(data?.error || 'Reset request failed');
+        error(data?.error || 'Failed to send reset email');
       }
     } catch (err) {
       console.error(err);
-      error('Reset request failed');
+      error('Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verificationCode || !newPassword) {
+      error('Please enter verification code and new password');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      error('Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: verificationCode,
+          email: resetEmail,
+          newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        success('Password reset successfully! Logging you in...');
+        setTimeout(() => {
+          setMode('login');
+          setResetEmail('');
+          setVerificationCode('');
+          setNewPassword('');
+          setConfirmNewPassword('');
+          setPassword('');
+        }, 2000);
+      } else {
+        error(data?.error || 'Failed to reset password');
+      }
+    } catch (err) {
+      console.error(err);
+      error('Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -241,17 +302,90 @@ export default function LoginPage() {
           )}
 
           {mode === 'reset' && (
-            <form onSubmit={handleReset} className="space-y-4 mb-8">
+            <form onSubmit={handleResetRequest} className="space-y-4 mb-8">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400 ml-1">Email or Username</label>
+                <label className="text-xs font-medium text-slate-400 ml-1">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
+                  <input 
+                    type="email" 
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="your.email@example.com"
+                    disabled={loading}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Enter the email address associated with your account</p>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-slate-600 disabled:to-slate-600 text-white font-semibold py-2.5 rounded-lg shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Sending email...
+                  </span>
+                ) : (
+                  'Send Verification Code'
+                )}
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setResetEmail(''); }}
+                className="w-full text-slate-500 hover:text-cyan-400 transition-colors text-sm font-medium py-2"
+              >
+                Back to Login
+              </button>
+            </form>
+          )}
+
+          {mode === 'verify' && (
+            <form onSubmit={handleVerifyReset} className="space-y-4 mb-8">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-400 ml-1">Verification Code</label>
                 <div className="relative group">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
                   <input 
                     type="text" 
-                    value={email || username}
-                    onChange={(e) => { if (mode === 'reset') { setEmail(e.target.value); setUsername(e.target.value); } }}
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
+                    maxLength={6}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all text-center tracking-widest font-mono"
+                    placeholder="000000"
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Enter the 6-digit code sent to {resetEmail}</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-400 ml-1">New Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
+                  <input 
+                    type="password" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
-                    placeholder="you@example.com or username"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-400 ml-1">Confirm Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
+                  <input 
+                    type="password" 
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                    placeholder="••••••••"
                   />
                 </div>
               </div>
@@ -261,7 +395,15 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-2.5 rounded-lg shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all"
               >
-                {loading ? 'Sending...' : 'Send Reset'}
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setMode('reset'); setVerificationCode(''); }}
+                className="w-full text-slate-500 hover:text-cyan-400 transition-colors text-sm font-medium py-2"
+              >
+                Back to Reset Request
               </button>
             </form>
           )}

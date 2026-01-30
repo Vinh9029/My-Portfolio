@@ -46,11 +46,23 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_ID || '',
       clientSecret: process.env.GOOGLE_SECRET || '',
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     GithubProvider({
       clientId: process.env.GITHUB_ID || '',
       clientSecret: process.env.GITHUB_SECRET || '',
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          allow_signup: true,
+        }
+      }
     }),
   ],
   pages: {
