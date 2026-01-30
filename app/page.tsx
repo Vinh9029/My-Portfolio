@@ -8,6 +8,7 @@ import {
   Github, Linkedin, Facebook, Mail, ChevronDown, ExternalLink, CheckCircle,
     Code2, Brain, Terminal, Cpu, Database, Award
 } from 'lucide-react';
+import { SocialContactPopup } from '@/app/components/SocialContactPopup';
 
 // --- Components ---
 
@@ -125,6 +126,7 @@ export default function Home() {
     return (
         <div className="bg-slate-950 min-h-screen text-slate-300 selection:bg-cyan-500/30 font-sans overflow-x-hidden">
             <Navbar />
+            <SocialContactPopup />
 
             {/* Hero Section */}
             <section className="min-h-screen flex flex-col justify-center items-center text-center relative overflow-hidden px-4 pt-20">
