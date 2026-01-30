@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     });
 
     // Send email with reset code
-    const emailSent = await sendPasswordResetEmail(user.email, code, user.username || user.name || 'User');
+    const emailSent = await sendPasswordResetEmail(user.email, code);
 
     if (!emailSent) {
       console.error('Failed to send password reset email to', user.email);
