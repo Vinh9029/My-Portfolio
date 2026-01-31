@@ -57,6 +57,16 @@ export const authOptions: NextAuthOptions = {
           access_type: "offline",
           response_type: "code"
         }
+      },
+      // Debug: log callback URL
+      profile(profile) {
+        console.log('Google profile received:', profile);
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        }
       }
     }),
     GithubProvider({
