@@ -6,6 +6,23 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "My Portfolio",
   description: "AI Engineering Student Portfolio",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "My Portfolio",
+    description: "AI Engineering Student Portfolio",
+    images: [
+      {
+        url: "/logo.png",
+        width: 192,
+        height: 192,
+        alt: "Portfolio Logo",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
