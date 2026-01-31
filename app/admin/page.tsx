@@ -78,10 +78,11 @@ export default function Dashboard() {
       return;
     }
     
-    // Nếu authenticate, check viewer mode và set ready
-    if (status === 'authenticated' && session) {
-      const mode = localStorage.getItem('userMode') || 'editor';
-      setIsViewerMode(mode === 'viewer');
+    // Nếu authenticate, check role từ session
+    if (status === 'authenticated' && session?.user) {
+      // Lấy role từ session, mặc định là 'viewer'
+      const userRole = (session.user as any)?.role || 'viewer';
+      setIsViewerMode(userRole !== 'editor');
       setAuthChecked(true);
     }
   }, [status, session, router]);
@@ -134,7 +135,8 @@ export default function Dashboard() {
 
   const handleAddNew = () => {
     if (isViewerMode) {
-      toast.warning('🔒 Viewer mode: You can only view content. Contact admin for full access.', 4500);
+      const userRole = (session?.user as any)?.role || 'viewer';
+      toast.warning(`🔒 You're in ${userRole} mode. Only editors can add content.`, 4500);
       return;
     }
     setEditingId(null);
@@ -147,7 +149,8 @@ export default function Dashboard() {
 
   const handleEdit = (item: any) => {
     if (isViewerMode) {
-      toast.warning('🔒 Viewer mode: You cannot edit content. Contact admin for full access.', 4500);
+      const userRole = (session?.user as any)?.role || 'viewer';
+      toast.warning(`🔒 You're in ${userRole} mode. Only editors can edit content.`, 4500);
       return;
     }
     setEditingId(item.id);
@@ -250,7 +253,8 @@ export default function Dashboard() {
 
   const handleDelete = async (id: string) => {
     if (isViewerMode) {
-      toast.warning('🔒 Viewer mode: You cannot delete content. Contact admin for full access.', 4500);
+      const userRole = (session?.user as any)?.role || 'viewer';
+      toast.warning(`🔒 You're in ${userRole} mode. Only editors can delete content.`, 4500);
       return;
     }
     try {
@@ -410,7 +414,9 @@ export default function Dashboard() {
                   className="flex items-center gap-1 px-3 py-1 bg-amber-500/15 border border-amber-500/40 rounded-full shadow-lg shadow-amber-500/10"
                 >
                   <Lock size={14} className="text-amber-400" />
-                  <span className="text-xs font-semibold text-amber-400">Viewer Mode</span>
+                  <span className="text-xs font-semibold text-amber-400 capitalize">
+                    {(session?.user as any)?.role || 'viewer'} Mode
+                  </span>
                 </motion.div>
               )}
             </motion.div>
