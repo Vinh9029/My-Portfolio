@@ -1,5 +1,5 @@
 // e:\MyPortfolio-1\prisma\seed.ts
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -80,7 +80,7 @@ async function main() {
             password: hashedPassword,
             email: 'vinh@example.com',
             name: 'Vinh Nguyen',
-            role: 'editor',
+            role: Role.editor,
         },
     });
     console.log('✓ User created:', { id: user.id, username: user.username });

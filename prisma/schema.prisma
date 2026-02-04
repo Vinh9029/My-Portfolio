@@ -8,6 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  viewer
+  editor
+}
+
 model Account {
   id                 String  @id @default(cuid())
   userId             String
@@ -43,7 +48,7 @@ model User {
   image         String?
   username      String?   @unique
   password      String?
-  role          String    @default("viewer")
+  role          Role      @default(viewer)
   accounts      Account[]
   sessions      Session[]
 }
