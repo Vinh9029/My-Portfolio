@@ -51,6 +51,8 @@ interface Experience {
 
 type TabType = 'projects' | 'experience' | 'certificates';
 
+type UserRole = 'viewer' | 'editor';
+
 export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -62,7 +64,7 @@ export default function Dashboard() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [experience, setExperience] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isViewerMode, setIsViewerMode] = useState(false);
+  const [isViewerMode, setIsViewerMode] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
 
   // Check authentication status
@@ -81,7 +83,7 @@ export default function Dashboard() {
     // Nếu authenticate, check role từ session
     if (status === 'authenticated' && session?.user) {
       // Lấy role từ session, mặc định là 'viewer'
-      const userRole = (session.user as any)?.role || 'viewer';
+      const userRole = ((session.user as any)?.role as UserRole) || 'viewer';
       setIsViewerMode(userRole !== 'editor');
       setAuthChecked(true);
     }
@@ -135,7 +137,7 @@ export default function Dashboard() {
 
   const handleAddNew = () => {
     if (isViewerMode) {
-      const userRole = (session?.user as any)?.role || 'viewer';
+      const userRole = ((session?.user as any)?.role as UserRole) || 'viewer';
       toast.warning(`🔒 You're in ${userRole} mode. Only editors can add content.`, 4500);
       return;
     }
@@ -149,7 +151,7 @@ export default function Dashboard() {
 
   const handleEdit = (item: any) => {
     if (isViewerMode) {
-      const userRole = (session?.user as any)?.role || 'viewer';
+      const userRole = ((session?.user as any)?.role as UserRole) || 'viewer';
       toast.warning(`🔒 You're in ${userRole} mode. Only editors can edit content.`, 4500);
       return;
     }
@@ -253,7 +255,7 @@ export default function Dashboard() {
 
   const handleDelete = async (id: string) => {
     if (isViewerMode) {
-      const userRole = (session?.user as any)?.role || 'viewer';
+      const userRole = ((session?.user as any)?.role as UserRole) || 'viewer';
       toast.warning(`🔒 You're in ${userRole} mode. Only editors can delete content.`, 4500);
       return;
     }
