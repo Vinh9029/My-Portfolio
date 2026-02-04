@@ -1,10 +1,7 @@
-// prisma/prisma.config.ts
-import { defineConfig } from '@prisma/cli';
-
-export default defineConfig({
+export default {
   datasource: {
     db: {
-      url: process.env.DATABASE_URL!,
+      url: process.env.DATABASE_URL,
     },
   },
-});
+};
