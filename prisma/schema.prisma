@@ -5,7 +5,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
+  
 }
 
 model Account {
@@ -43,9 +44,14 @@ model User {
   image         String?
   username      String?   @unique
   password      String?
-  role          String    @default("viewer")
+  role          Role      @default(viewer)
   accounts      Account[]
   sessions      Session[]
+}
+
+enum Role {
+  viewer
+  editor
 }
 
 model VerificationToken {

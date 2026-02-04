@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             email: user.email,
             image: user.image,
+            role: user.role, // Trả về role cho session
           };
         } catch (error) {
           console.error('Authorize error:', error);
@@ -87,12 +88,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role || 'viewer'; // Đảm bảo role luôn có trong token
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id as string;
+        (session.user as any).role = token.role || 'viewer'; // Đảm bảo role luôn có trong session
       }
       return session;
     },
